@@ -157,8 +157,13 @@
 #include <limits.h>
 #if defined(__digital__) && defined(__unix__)
 # include <sex.h>
-#elif defined(__FreeBSD__) || defined(__OpenBSD__) || defined(__NetBSD__) \
-   || defined(__APPLE__)
+#elif defined(__APPLE__)
+# include <machine/endian.h>
+# include <libkern/OSByteOrder.h>
+# define bswap_16 OSSwapInt16
+# define bswap_32 OSSwapInt32
+# define bswap_64 OSSwapInt64
+#elif defined(__FreeBSD__) || defined(__OpenBSD__) || defined(__NetBSD__)
 # include <sys/resource.h>  /* rlimit */
 # include <machine/endian.h>
 # define bswap_64 __bswap64
@@ -425,6 +430,7 @@ typedef unsigned smalluint;
 #define HAVE_GETLINE 1
 #define HAVE_XTABS 1
 #define HAVE_MNTENT_H 1
+#define HAVE_NET 1
 #define HAVE_NET_ETHERNET_H 1
 #define HAVE_SYS_STATFS_H 1
 #define HAVE_PRINTF_PERCENTM 1
@@ -495,7 +501,9 @@ typedef unsigned smalluint;
 #endif
 
 #if defined(__APPLE__)
+# undef HAVE_MEMRCHR
 # undef HAVE_STRCHRNUL
+# undef HAVE_MEMPCPY
 #endif
 
 #if defined(__FreeBSD__)
@@ -551,6 +559,12 @@ typedef unsigned smalluint;
 # undef HAVE_UNLOCKED_LINE_OPS
 # undef HAVE_NET_ETHERNET_H
 # undef HAVE_PRINTF_PERCENTM
+#endif
+
+#if defined(__wasi__)
+# undef HAVE_MNTENT_H
+# undef HAVE_SYS_STATFS_H
+# undef HAVE_NET
 #endif
 
 /*

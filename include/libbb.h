@@ -17,7 +17,9 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <inttypes.h>
+#ifdef HAVE_NET
 #include <netdb.h>
+#endif
 #include <setjmp.h>
 #include <signal.h>
 #include <paths.h>
@@ -47,7 +49,7 @@
 #include <sys/time.h>
 #include <sys/types.h>
 #if !defined(major) || defined(__GLIBC__)
-# include <sys/sysmacros.h>
+//# include <sys/sysmacros.h>
 #endif
 #include <sys/wait.h>
 #include <termios.h>
@@ -138,13 +140,13 @@
 #ifndef _PATH_GSHADOW
 #define _PATH_GSHADOW "/etc/gshadow"
 #endif
-#if defined __FreeBSD__ || defined __OpenBSD__
+#if defined __FreeBSD__ || defined __OpenBSD__ || defined __APPLE__
 # include <netinet/in.h>
 # include <arpa/inet.h>
-#elif defined __APPLE__
-# include <netinet/in.h>
 #else
+#ifdef HAVE_NET
 # include <arpa/inet.h>
+#endif
 //This breaks on bionic:
 //# if !defined(__socklen_t_defined) && !defined(_SOCKLEN_T_DECLARED)
 ///* We #define socklen_t *after* includes, otherwise we get
@@ -1368,11 +1370,13 @@ uint32_t getopt32long(char **argv, const char *optstring, const char *longopts, 
  *
  * By ~2008, OpenBSD 3.4 was changed to survive glibc-like optind = 0
  * (to interpret it as if optreset was set).
+ *
+ * Note: Apple's getopt was not.
  */
-#if 1 /*def __GLIBC__*/
+#ifndef __APPLE__ /*def __GLIBC__*/
 #define GETOPT_RESET() (optind = 0)
 #else /* BSD style */
-#define GETOPT_RESET() (optind = 1)
+#define GETOPT_RESET() (optind = optreset = 1)
 #endif
 
 

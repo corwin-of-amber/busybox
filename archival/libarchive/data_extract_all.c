@@ -201,7 +201,9 @@ void FAST_FUNC data_extract_all(archive_handle_t *archive_handle)
 				dst_name,
 				0);
 		break;
+#ifdef HAVE_NET
 	case S_IFSOCK:
+#endif
 	case S_IFBLK:
 	case S_IFCHR:
 	case S_IFIFO:

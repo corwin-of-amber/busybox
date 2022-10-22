@@ -44,7 +44,9 @@
 #include <sys/ioctl.h>
 #include <sys/mman.h>
 #include <sys/resource.h>
+#ifdef HAVE_NET
 #include <sys/socket.h>
+#endif
 #include <sys/stat.h>
 #include <sys/time.h>
 #include <sys/types.h>
@@ -286,7 +288,7 @@ PUSH_AND_SET_FUNCTION_VISIBILITY_TO_HIDDEN
  * (in today's world - signed 64bit). For full support of large files,
  * we need a few helper #defines (below) and careful use of off_t
  * instead of int/ssize_t. No lseek64(), O_LARGEFILE etc necessary */
-#if ENABLE_LFS
+#if ENABLE_LFS || defined(__wasi__)
 /* CONFIG_LFS is on */
 # if ULONG_MAX > 0xffffffff
 /* "long" is long enough on this system */
@@ -685,6 +687,7 @@ struct fd_pair { int rd; int wr; };
 /* Useful for having small structure members/global variables */
 typedef int8_t socktype_t;
 typedef int8_t family_t;
+#ifdef HAVE_NET
 struct BUG_too_small {
 	char BUG_socktype_t_too_small[(0
 			| SOCK_STREAM
@@ -708,6 +711,7 @@ struct BUG_too_small {
 			/* | AF_IPX */
 			) <= 127 ? 1 : -1];
 };
+#endif
 
 
 int parse_datestr(const char *date_str, struct tm *ptm) FAST_FUNC;
@@ -718,6 +722,7 @@ void xgettimeofday(struct timeval *tv) FAST_FUNC;
 void xsettimeofday(const struct timeval *tv) FAST_FUNC;
 
 
+#ifdef HAVE_NET
 int xsocket(int domain, int type, int protocol) FAST_FUNC;
 void xbind(int sockfd, struct sockaddr *my_addr, socklen_t addrlen) FAST_FUNC;
 void xlisten(int s, int backlog) FAST_FUNC;
@@ -833,6 +838,7 @@ char* xmalloc_sockaddr2dotted_noport(const struct sockaddr *sa) FAST_FUNC RETURN
 struct hostent *xgethostbyname(const char *name) FAST_FUNC;
 // Also mount.c and inetd.c are using gethostbyname(),
 // + inet_common.c has additional IPv4-only stuff
+#endif
 
 
 struct tls_aes {
@@ -902,6 +908,7 @@ void tls_handshake(tls_state_t *tls, const char *sni) FAST_FUNC;
 void tls_run_copy_loop(tls_state_t *tls, unsigned flags) FAST_FUNC;
 
 
+#ifdef HAVE_NET
 void socket_want_pktinfo(int fd) FAST_FUNC;
 ssize_t send_to_from(int fd, void *buf, size_t len, int flags,
 		const struct sockaddr *to,
@@ -911,6 +918,7 @@ ssize_t recv_from_to(int fd, void *buf, size_t len, int flags,
 		struct sockaddr *from,
 		struct sockaddr *to,
 		socklen_t sa_size) FAST_FUNC;
+#endif
 
 uint16_t inet_cksum(const void *addr, int len) FAST_FUNC;
 int parse_pasv_epsv(char *buf) FAST_FUNC;
@@ -1551,6 +1559,7 @@ int print_numbered_lines(struct number_state *ns, const char *filename) FAST_FUN
 
 /* Networking */
 /* This structure defines protocol families and their handlers. */
+#ifdef HAVE_NET
 struct aftype {
 	const char *name;
 	const char *title;
@@ -1587,7 +1596,7 @@ int in_ib(const char *bufp, struct sockaddr *sap) FAST_FUNC;
 const struct aftype *get_aftype(const char *name) FAST_FUNC;
 const struct hwtype *get_hwtype(const char *name) FAST_FUNC;
 const struct hwtype *get_hwntype(int type) FAST_FUNC;
-
+#endif
 
 extern int fstype_matches(const char *fstype, const char *comma_list) FAST_FUNC;
 #ifdef HAVE_MNTENT_H

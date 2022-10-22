@@ -9,6 +9,12 @@
 Kbuild
 Config.in
 
+# wasm
+*.wo
+*.wa
+*.wasm
+*.wat
+
 #
 # Never ignore these
 #

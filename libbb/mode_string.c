@@ -24,7 +24,10 @@
  || ( S_IFIFO != 0010000 )
 # warning mode type bitflag value assumption(s) violated! falling back to larger version
 
-# if (S_IRWXU | S_IRWXG | S_IRWXO | S_ISUID | S_ISGID | S_ISVTX) == 07777
+/* @todo can this ever work even if !__wasi__ ?
+ * because then the function does not match its prototype... */
+# if !defined(__wasi__) && \
+     (S_IRWXU | S_IRWXG | S_IRWXO | S_ISUID | S_ISGID | S_ISVTX) == 07777
 #  undef mode_t
 #  define mode_t unsigned short
 # endif

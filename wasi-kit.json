@@ -1,0 +1,9 @@
+{
+    "*": {
+        "args": ["-D_WASI_EMULATED_MMAN"]
+    },
+    "busybox_unstripped": {
+        "output": "busybox.wasm",
+        "args": ["-lwasi-emulated-mman", "-lwasi-emulated-signal", "-Wl,-allow-undefined"]
+    }
+}

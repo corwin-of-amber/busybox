@@ -8,6 +8,8 @@ obj = [a for a in args if a.endswith('.o') or a.endswith('.a')]
 lib, obj = obj[0], obj[1:]
 
 if obj:
-    os.system(" ".join(['libtool -static -c -o', lib, *obj]))
+    #os.system(" ".join(['libtool -static -c -o', lib, *obj]))
+    os.system(" ".join(['ar', *args]))
+    os.system("ranlib -c " + lib)
 else:
     open(lib, 'w')  # empty file

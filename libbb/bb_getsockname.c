@@ -4,7 +4,7 @@
  *
  * Licensed under GPLv2, see file LICENSE in this source tree.
  */
-//kbuild:lib-y += bb_getsockname.o
+//kbuild:lib-$(CONFIG_NET) += bb_getsockname.o
 
 #include "libbb.h"
 

@@ -489,6 +489,7 @@ IF_FEATURE_IPV6(if (domain == AF_INET6) s = "INET6";)
 	return r;
 }
 
+#ifdef HAVE_NET
 // Die with an error message if we can't bind a socket to an address.
 void FAST_FUNC xbind(int sockfd, struct sockaddr *my_addr, socklen_t addrlen)
 {
@@ -514,6 +515,7 @@ ssize_t FAST_FUNC xsendto(int s, const void *buf, size_t len, const struct socka
 	}
 	return ret;
 }
+#endif
 
 // xstat() - a stat() which dies on failure with meaningful error message
 void FAST_FUNC xstat(const char *name, struct stat *stat_buf)

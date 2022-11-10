@@ -1,9 +1,10 @@
 {
-    "*": {
-        "args": ["-D_WASI_EMULATED_MMAN"]
+    "shell/ash.o": {
+        "args": ["-fblocks", "-Wno-shadow"]
     },
     "busybox_unstripped": {
         "output": "busybox.wasm",
-        "args": ["-lwasi-emulated-mman", "-lwasi-emulated-signal", "-Wl,-allow-undefined"]
+        "args": ["-lwasi-emulated-mman", "-lwasi-emulated-signal",
+                 "-Wl,-allow-undefined", "-Wl,-import-table"]
     }
 }

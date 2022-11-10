@@ -5173,6 +5173,12 @@ clear_traps(void)
 /* Lives far away from here, needed for forkchild */
 static void closescript(void);
 
+#ifdef __wasi__
+static void
+forkchild(struct job *jp, union node *n, int mode)
+    __attribute__ ((unused));
+#endif
+
 /* Called after fork(), in child */
 /* jp and n are NULL when called by openhere() for heredoc support */
 static NOINLINE void
@@ -5334,6 +5340,8 @@ forkparent(struct job *jp, union node *n, int mode, pid_t pid)
 	}
 }
 
+#ifndef __wasi__
+
 /* jp and n are NULL when called by openhere() for heredoc support */
 static int
 forkshell(struct job *jp, union node *n, int mode)
@@ -5356,6 +5364,43 @@ forkshell(struct job *jp, union node *n, int mode)
 	}
 	return pid;
 }
+
+#endif
+
+#ifdef __wasi__
+#include <wasi/control.h>
+
+static int
+forkshell_cont(struct job *jp, union node *n, int mode, void (^cont)(int))
+{
+	int pid;
+
+	TRACE(("forkshell(%%%d, %p, %d) called\n", jobno(jp), n, mode));
+	pid = fork();
+
+	__control_fork(0, pid, ^ void (int pid) {
+		if (pid < 0) {
+			TRACE(("Fork failed, errno=%d", errno));
+			if (jp)
+				freejob(jp);
+			ash_msg_and_raise_perror("can't fork");
+		}
+		if (pid == 0) {
+			cont(0);
+			/* do *not* call `forkchild()` -- child and parent share address space! */
+		} else {
+			forkparent(jp, n, mode, pid);
+			cont(pid);
+		}
+    });
+	return pid;
+}
+
+static int
+forkshell(struct job *jp, union node *n, int mode) {
+    return forkshell_cont(jp, n, mode, ^ void (int pid) { (void)pid; });
+}
+#endif
 
 /*
  * Wait for job to finish.
@@ -10559,6 +10604,23 @@ evalcommand(union node *cmd, int flags)
 			break;
 		}
 #endif
+#ifdef __wasi__
+		/* In the case of WASI, there is no `exec`; running a command
+		 * always requires (fake) forking.
+		 */
+        get_tty_state();
+        jp = makejob(/*cmd,*/ 1);
+        forkshell_cont(jp, cmd, FORK_FG, ^ (int pid) {
+            if (pid != 0) {
+                /* parent */
+            }
+            else {
+                shellexec(argv[0], argv, path, cmdentry.u.index);
+				/* NOTREACHED */
+            }
+        });
+        break;
+#else
 		/* Can we avoid forking? For example, very last command
 		 * in a script or a subshell does not need forking,
 		 * we can just exec it.
@@ -10578,6 +10640,7 @@ evalcommand(union node *cmd, int flags)
 		}
 		shellexec(argv[0], argv, path, cmdentry.u.index);
 		/* NOTREACHED */
+#endif
 	} /* default */
 	case CMDBUILTIN:
 		if (evalbltin(cmdentry.u.cmd, argc, argv, flags)
